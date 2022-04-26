@@ -1,7 +1,7 @@
 {
-  "name": "logseq-starter-plugin",
-  "version": "1.0",
-  "description": "Starter Plugin",
+  "name": "logseq-automatic-linker",
+  "version": "1.0.0",
+  "description": "Automatic Linker",
   "main": "dist/index.html",
   "targets": {
     "main": false
@@ -14,11 +14,13 @@
   "author": "Aryan Sawhney",
   "license": "MIT",
   "dependencies": {
-    "@logseq/libs": "0.0.1-alpha.34"
+    "@logseq/libs": "0.0.2",
+    "logseq-dateutils": "^0.0.21",
+    "sherlockjs": "^1.4.2"
   },
   "logseq": {
-    "id": "logseq-starter-plugin",
-    "title": "logseq-starter-plugin",
+    "id": "logseq-automatic-linker",
+    "title": "Automatic Linker",
     "icon": "./icon.png"
   },
   "devDependencies": {
