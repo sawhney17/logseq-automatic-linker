@@ -29,20 +29,22 @@ const parseForRegex = (string) => {
     .replaceAll("{", '\\{')
     .replaceAll("}", '\\}')
 }
-async function parseBlockForLink(e) {
-  console.log(e)
-  const block = e.blocks[0]
-  let content = block.content
-  console.log(content)
+async function parseBlockForLink(e = null, d = null) {
+  let content
+  let block
+  if (e != null) {
+    block = e.blocks[0]
+
+  }
+  else {
+    block = await logseq.Editor.getBlock(d)
+  }
+  content = block.content
   content = content.replaceAll(/{.*}/g, (match) => {
-    console.log(Sherlock.parse(match.slice(1, -1)).startDate)
-    console.log(match)
     return getDateForPage(Sherlock.parse(match.slice(1, -1)).startDate, dateFormat)
   })
 
-  //rmeove first and last letter frmo the 
-
-  console.log()
+  //rmeove first and last letter from the result 
   pageList.forEach((value) => {
     const regex = new RegExp(`(\\w*(?<!\\[)\\w*(?<!\\#))\\b(${parseForRegex(value)})\\b`, 'gi')
     if (value.length > 0) {
@@ -72,7 +74,11 @@ const main = async () => {
     console.log("graph changed")
     getPages()
   })
+  logseq.Editor.registerBlockContextMenuItem("Parse Block for Links", (e) => {
+    return parseBlockForLink(null, e.uuid);
+  })
   logseq.App.registerCommandShortcut({ binding: 'mod+shift+l' }, () => {
+    getPages()
     if (enableHook) {
       logseq.App.showMsg("Auto Parse Links disabled")
       enableHook = false
@@ -81,6 +87,14 @@ const main = async () => {
       logseq.App.showMsg("Auto Parse Links enabled")
       enableHook = true
     }
+  })
+  logseq.App.registerCommandShortcut({ binding: 'mod+p' }, (e) => {
+    getPages()
+    console.log("Parse")
+    if (!enableHook) {
+      parseBlockForLink(null, e.uuid)
+    }
+
   })
 }
 logseq.ready(main).catch(console.error);
