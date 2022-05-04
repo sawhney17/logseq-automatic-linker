@@ -1,7 +1,7 @@
 {
   "name": "logseq-automatic-linker",
-  "version": "1.0.0",
-  "description": "Automatic Linker",
+  "version": "1.0.1",
+  "description": "A plugin to automatically create links. ",
   "main": "dist/index.html",
   "targets": {
     "main": false
@@ -21,7 +21,8 @@
   "logseq": {
     "id": "logseq-automatic-linker",
     "title": "Automatic Linker",
-    "icon": "./icon.png"
+    "icon": "./icon.png",
+    "description": "A plugin to automatically create links. "
   },
   "devDependencies": {
     "parcel": "^2.0.0"
