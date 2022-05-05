@@ -4,6 +4,7 @@ import Sherlock from 'sherlockjs'
 import { getDateForPage } from 'logseq-dateutils'
 //Inputs 5 numbered blocks when called
 let pageList = []
+let stopWords = ['LATER', 'DONE', 'TODO', 'NOW']
 var enableHook = false
 var inProcess = false
 let dateFormat;
@@ -13,7 +14,9 @@ async function getPages() {
   logseq.DB.datascriptQuery(query).then(
     (results) => {
       for (const x in results) {
-        pageList.push(results[x][0].name)
+        if (!stopWords.includes(results[x][0].name.toUpperCase())) {
+          pageList.push(results[x][0].name)
+        }
       }
     }
   )
