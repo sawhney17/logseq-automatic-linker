@@ -4,7 +4,7 @@ import Sherlock from 'sherlockjs'
 import { getDateForPage } from 'logseq-dateutils'
 //Inputs 5 numbered blocks when called
 let pageList = []
-let stopWords = ['LATER', 'DONE', 'TODO', 'NOW']
+var blockArray = ['LATER', 'DONE', 'TODO', 'NOW']
 var enableHook = false
 var inProcess = false
 let dateFormat;
@@ -32,16 +32,11 @@ const parseForRegex = (string) => {
     .replaceAll("{", '\\{')
     .replaceAll("}", '\\}')
 }
-async function parseBlockForLink(e = null, d = null) {
+async function parseBlockForLink(d = null) {
   let content
   let block
-  if (e != null) {
-    block = e.blocks[0]
 
-  }
-  else {
-    block = await logseq.Editor.getBlock(d)
-  }
+  block = await logseq.Editor.getBlock(d)
   content = block.content
   content = content.replaceAll(/{.*}/g, (match) => {
     return getDateForPage(Sherlock.parse(match.slice(1, -1)).startDate, dateFormat)
@@ -60,8 +55,8 @@ async function parseBlockForLink(e = null, d = null) {
         content = content.replaceAll(regex, (match) => {
           return `[[${match}]]`
         })
-        logseq.Editor.updateBlock(block.uuid, `${content} `)
-        setTimeout(() => { inProcess = false }, 300)
+        logseq.Editor.updateBlock(block.uuid, `${content}`)
+        // setTimeout(() => { inProcess = false }, 300)
       }
     }
   })
@@ -73,8 +68,19 @@ const main = async () => {
   getPages()
   dateFormat = (await logseq.App.getUserConfigs()).preferredDateFormat
   logseq.DB.onChanged((e) => {
-    if (enableHook && !inProcess) {
-      parseBlockForLink(e)
+    if (e.txMeta.outlinerOp == "insertBlocks") {
+      if (enableHook) {
+        for (const x in blockArray) {
+          parseBlockForLink(blockArray[x])
+        }
+      }
+    }
+    else {
+      //if blocks array doesn't already contain the block uuid, push to it
+      const block = e.blocks[0].uuid
+      if (!blockArray.includes(block)) {
+        blockArray.push(block)
+      }
     }
   })
   logseq.App.onCurrentGraphChanged(() => {
@@ -82,7 +88,7 @@ const main = async () => {
     getPages()
   })
   logseq.Editor.registerBlockContextMenuItem("Parse Block for Links", (e) => {
-    return parseBlockForLink(null, e.uuid);
+    return parseBlockForLink(e.uuid);
   })
   logseq.App.registerCommandShortcut({ binding: 'mod+shift+l' }, () => {
     getPages()
@@ -99,7 +105,7 @@ const main = async () => {
     getPages()
     console.log("Parse")
     if (!enableHook) {
-      parseBlockForLink(null, e.uuid)
+      parseBlockForLink(e.uuid)
     }
 
   })
