@@ -1,5 +1,5 @@
 import '@logseq/libs';
-import { SimpleCommandKeybinding, UIMsgOptions } from '@logseq/libs/dist/LSPlugin.user';
+import { SettingSchemaDesc, SimpleCommandKeybinding, UIMsgOptions } from '@logseq/libs/dist/LSPlugin.user';
 import Sherlock from 'sherlockjs'
 import { getDateForPage } from 'logseq-dateutils'
 //Inputs 5 numbered blocks when called
@@ -8,6 +8,21 @@ var blockArray = ['LATER', 'DONE', 'TODO', 'NOW']
 var enableHook = false
 var inProcess = false
 let dateFormat;
+
+const settings:SettingSchemaDesc[] = [{
+  key: "stateKeybinding",
+  description: "Keybinding to toggle Automatic Parsing",
+  type: "string",
+  default: "mod+shift+l",
+  title: "Keybinding for Automatic Parsing"
+},
+{
+  key: "parseSingleBlockKeybinding",
+  description: "Keybinding to parse a single block",
+  type: "string",
+  default: "mod+p",
+  title: "Keybinding for Parsing a Single Block"
+}]
 async function getPages() {
   pageList = []
   const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/name]]`
@@ -90,7 +105,7 @@ const main = async () => {
   logseq.Editor.registerBlockContextMenuItem("Parse Block for Links", (e) => {
     return parseBlockForLink(e.uuid);
   })
-  logseq.App.registerCommandShortcut({ binding: 'mod+shift+l' }, () => {
+  logseq.App.registerCommandShortcut({ binding: logseq.settings.stateKeybinding }, () => {
     getPages()
     if (enableHook) {
       logseq.App.showMsg("Auto Parse Links disabled")
@@ -101,9 +116,8 @@ const main = async () => {
       enableHook = true
     }
   })
-  logseq.App.registerCommandShortcut({ binding: 'mod+p' }, (e) => {
+  logseq.App.registerCommandShortcut({ binding: logseq.settings.parseSingleBlockKeybinding }, (e) => {
     getPages()
-    console.log("Parse")
     if (!enableHook) {
       parseBlockForLink(e.uuid)
     }
