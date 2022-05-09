@@ -46,6 +46,10 @@ async function parseBlockForLink(e = null, d = null) {
   content = content.replaceAll(/{.*}/g, (match) => {
     return getDateForPage(Sherlock.parse(match.slice(1, -1)).startDate, dateFormat)
   })
+  console.log('linker::-------\n', content)
+  if (content.includes('http')) {
+    return
+  }
 
   //rmeove first and last letter from the result 
   pageList.forEach((value) => {
