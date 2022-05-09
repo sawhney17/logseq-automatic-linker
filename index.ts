@@ -23,6 +23,7 @@ const settings:SettingSchemaDesc[] = [{
   default: "mod+p",
   title: "Keybinding for Parsing a Single Block"
 }]
+logseq.useSettingsSchema(settings)
 async function getPages() {
   pageList = []
   const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/name]]`
