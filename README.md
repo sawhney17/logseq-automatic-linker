@@ -6,7 +6,7 @@ Requires logseq version 0.67 and above to function properly
 
 ## Instructions
 1. Install the plugin from the marketplace
-2. Use the keyboard shortcut `command shift l` to enable automatic mode 
-3. Else, Use `command p` to parse the current block 
+2. Use the keyboard shortcut <kbd>Command</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> to enable automatic mode 
+3. Else, Use <kbd>Command</kbd>+<kbd>P</kbd> to parse the current block 
 4. Else, right click the bullet and click parse block for links
 5. Watch as the links are automatically made!!
