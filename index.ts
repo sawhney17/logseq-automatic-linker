@@ -57,7 +57,7 @@ async function parseBlockForLink(d = null) {
   })
   //rmeove first and last letter from the result 
   pageList.forEach((value) => {
-    const regex = new RegExp(`(\\w*(?<!\\[)\\w*(?<!\\#)\\w*(?<!https?:\/\/\\S*))\\b(${parseForRegex(value)})\\b`, 'gi')
+    const regex = new RegExp(`(\\w*(?<!\\[)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))\\b(${parseForRegex(value)})\\b`, 'gi')
     if (value.length > 0) {
       if (content.toUpperCase().includes(value.toUpperCase())) {
         inProcess = true
