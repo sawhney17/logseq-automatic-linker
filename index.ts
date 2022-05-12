@@ -1,15 +1,21 @@
 import '@logseq/libs';
-import { SettingSchemaDesc, SimpleCommandKeybinding, UIMsgOptions } from '@logseq/libs/dist/LSPlugin.user';
+import { SettingSchemaDesc } from '@logseq/libs/dist/LSPlugin.user';
+// @ts-ignore
 import Sherlock from 'sherlockjs'
 import { getDateForPage } from 'logseq-dateutils'
-//Inputs 5 numbered blocks when called
-let pageList = []
-var blockArray = []
-var enableHook = false
-var inProcess = false
-let dateFormat;
 
-const settings:SettingSchemaDesc[] = [{
+let pageList: string[] = []
+let blockArray: string[] = [];
+let dateFormat = "";
+
+const settings: SettingSchemaDesc[] = [{
+  key: "enableAutoParse",
+  description: "Automatically parse the block on enter",
+  type: "boolean",
+  default: false,
+  title: "Automatically parse the block on enter"
+},
+{
   key: "stateKeybinding",
   description: "Keybinding to toggle Automatic Parsing",
   type: "string",
@@ -22,21 +28,42 @@ const settings:SettingSchemaDesc[] = [{
   type: "string",
   default: "mod+p",
   title: "Keybinding for Parsing a Single Block"
+},
+{
+  key: "parseSingleWordAsTag",
+  description: "Parse single words as tags",
+  type: "boolean",
+  default: false,
+  title: "Parse single words as tags"
+},
+{
+  key: "parseAsTags",
+  description: "Parse all links as tags",
+  type: "boolean",
+  default: false,
+  title: "Parse all links as tags"
+},
+{
+  key: "pagesToIgnore",
+  description: "Pages to ignore when generating links",
+  type: "string",
+  default: "TODO,A,B,C",
+  title: "Pages to ignore when generating links"
 }]
 logseq.useSettingsSchema(settings)
 async function getPages() {
-  pageList = []
+  const pagesToIgnore = logseq.settings?.pagesToIgnore.split(',').map(x => x.toUpperCase().trim())
   const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/name]]`
   logseq.DB.datascriptQuery(query).then(
     (results) => {
-      for (const x in results) {
-        pageList.push(results[x][0].name)
-      }
+      pageList = results
+        .filter(x => !pagesToIgnore.includes(x[0].name.toUpperCase()))
+        .map(x => x[0].name)
     }
   )
 }
-const parseForRegex = (string) => {
-  return string
+const parseForRegex = (s: string) => {
+  return s
     .replaceAll("[", '\\[')
     .replaceAll("]", '\\]')
     .replaceAll(")", '\\)')
@@ -46,30 +73,27 @@ const parseForRegex = (string) => {
     .replaceAll("{", '\\{')
     .replaceAll("}", '\\}')
 }
-async function parseBlockForLink(d = null) {
-  let content
-  let block
-
-  block = await logseq.Editor.getBlock(d)
-  content = block.content
-  content = content.replaceAll(/{.*}/g, (match) => {
+async function parseBlockForLink(d: string) {
+  let block = await logseq.Editor.getBlock(d)
+  let content = block.content.replaceAll(/{.*}/g, (match) => {
     return getDateForPage(Sherlock.parse(match.slice(1, -1)).startDate, dateFormat)
   })
-  //rmeove first and last letter from the result 
+
   pageList.forEach((value) => {
     const regex = new RegExp(`(\\w*(?<!\\[)\\w*(?<!\\#))\\b(${parseForRegex(value)})\\b`, 'gi')
     if (value.length > 0) {
       if (content.toUpperCase().includes(value.toUpperCase())) {
-        inProcess = true
         content = content.replaceAll(regex, (match) => {
+          const hasSpaces = /\s/g.test(match)
+          if (logseq.settings?.parseAsTags || (logseq.settings?.parseSingleWordAsTag && !hasSpaces)) {
+            return hasSpaces ? `#[[${match}]]` : `#${match}`
+          }
           return `[[${match}]]`
         })
         logseq.Editor.updateBlock(block.uuid, `${content}`)
-        // setTimeout(() => { inProcess = false }, 300)
       }
     }
   })
-  // logseq.Editor.updateBlock(block.uuid, content)
 }
 
 
@@ -77,14 +101,11 @@ const main = async () => {
   getPages()
   dateFormat = (await logseq.App.getUserConfigs()).preferredDateFormat
   logseq.DB.onChanged((e) => {
-    if (e.txMeta.outlinerOp == "insertBlocks") {
-      if (enableHook) {
-        for (const x in blockArray) {
-          parseBlockForLink(blockArray[x])
-        }
+    if (e.txMeta?.outlinerOp == "insertBlocks") {
+      if (logseq.settings?.enableAutoParse) {
+        blockArray.forEach(parseBlockForLink)
       }
-    }
-    else {
+    } else {
       //if blocks array doesn't already contain the block uuid, push to it
       const block = e.blocks[0].uuid
       if (!blockArray.includes(block)) {
@@ -92,30 +113,21 @@ const main = async () => {
       }
     }
   })
-  logseq.App.onCurrentGraphChanged(() => {
-    console.log("graph changed")
-    getPages()
-  })
+  logseq.App.onCurrentGraphChanged(getPages)
   logseq.Editor.registerBlockContextMenuItem("Parse Block for Links", (e) => {
     return parseBlockForLink(e.uuid);
   })
-  logseq.App.registerCommandShortcut({ binding: logseq.settings.stateKeybinding }, () => {
+  logseq.App.registerCommandShortcut({ binding: logseq.settings?.stateKeybinding }, () => {
     getPages()
-    if (enableHook) {
-      logseq.App.showMsg("Auto Parse Links disabled")
-      enableHook = false
-    }
-    else {
-      logseq.App.showMsg("Auto Parse Links enabled")
-      enableHook = true
-    }
+    const enabledText = logseq.settings?.enableAutoParse ? 'disabled' : 'enabled'
+    logseq.App.showMsg(`Auto Parse Links ${enabledText}`)
+    logseq.updateSettings({ enableAutoParse: !logseq.settings?.enableAutoParse })
   })
-  logseq.App.registerCommandShortcut({ binding: logseq.settings.parseSingleBlockKeybinding }, (e) => {
+  logseq.App.registerCommandShortcut({ binding: logseq.settings?.parseSingleBlockKeybinding }, (e) => {
     getPages()
-    if (!enableHook) {
+    if (!logseq.settings?.enableAutoParse) {
       parseBlockForLink(e.uuid)
     }
-
   })
 }
 logseq.ready(main).catch(console.error);
