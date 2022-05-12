@@ -53,12 +53,12 @@ const settings: SettingSchemaDesc[] = [{
 logseq.useSettingsSchema(settings)
 async function getPages() {
   const pagesToIgnore = logseq.settings?.pagesToIgnore.split(',').map(x => x.toUpperCase().trim())
-  const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/name]]`
+  const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`
   logseq.DB.datascriptQuery(query).then(
     (results) => {
       pageList = results
-        .filter(x => !pagesToIgnore.includes(x[0].name.toUpperCase()))
-        .map(x => x[0].name)
+        .filter(x => !pagesToIgnore.includes(x[0]['original-name'].toUpperCase()))
+        .map(x => x[0]['original-name'])
     }
   )
 }
@@ -86,9 +86,9 @@ async function parseBlockForLink(d: string) {
         content = content.replaceAll(regex, (match) => {
           const hasSpaces = /\s/g.test(match)
           if (logseq.settings?.parseAsTags || (logseq.settings?.parseSingleWordAsTag && !hasSpaces)) {
-            return hasSpaces ? `#[[${match}]]` : `#${match}`
+            return hasSpaces ? `#[[${value}]]` : `#${value}`
           }
-          return `[[${match}]]`
+          return `[[${value}]]`
         })
         logseq.Editor.updateBlock(block.uuid, `${content}`)
       }
