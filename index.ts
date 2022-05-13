@@ -56,6 +56,8 @@ async function parseBlockForLink(d = null) {
     return getDateForPage(Sherlock.parse(match.slice(1, -1)).startDate, dateFormat)
   })
   //rmeove first and last letter from the result 
+  let needsUpdate = false
+
   pageList.forEach((value) => {
     const regex = new RegExp(`(\\w*(?<!\\[)\\w*(?<!\\#))\\b(${parseForRegex(value)})\\b`, 'gi')
     if (value.length > 0) {
@@ -64,12 +66,15 @@ async function parseBlockForLink(d = null) {
         content = content.replaceAll(regex, (match) => {
           return `[[${match}]]`
         })
-        logseq.Editor.updateBlock(block.uuid, `${content}`)
+        needsUpdate = true
         // setTimeout(() => { inProcess = false }, 300)
       }
     }
   })
   // logseq.Editor.updateBlock(block.uuid, content)
+  if(needsUpdate) {
+    logseq.Editor.updateBlock(block.uuid, `${content}`)
+  }
 }
 
 
