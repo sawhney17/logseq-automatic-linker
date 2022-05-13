@@ -126,6 +126,7 @@ const main = async () => {
   })
   logseq.App.registerCommandShortcut({ binding: logseq.settings?.stateKeybinding }, () => {
     getPages()
+    blockArray = []
     const enabledText = logseq.settings?.enableAutoParse ? 'disabled' : 'enabled'
     logseq.App.showMsg(`Auto Parse Links ${enabledText}`)
     logseq.updateSettings({ enableAutoParse: !logseq.settings?.enableAutoParse })
