@@ -47,7 +47,7 @@ const settings: SettingSchemaDesc[] = [{
   key: "pagesToIgnore",
   description: "Pages to ignore when generating links",
   type: "string",
-  default: "a,b,c,now,later,todo,doing,done,wait,waiting,canceled,cancelled,started,in-progress",
+  default: "a,b,c,card,now,later,todo,doing,done,wait,waiting,canceled,cancelled,started,in-progress",
   title: "Pages to ignore when generating links"
 }]
 logseq.useSettingsSchema(settings)
