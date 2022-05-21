@@ -82,7 +82,7 @@ async function parseBlockForLink(d: string) {
   let needsUpdate = false
 
   pageList.forEach((value) => {
-    const regex = new RegExp(`(\\w*(?<!\\[)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))\\b(${parseForRegex(value)})\\b`, 'gi')
+    const regex = new RegExp(`(\\w*(?<!\\[{2}[^[\\]]*)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))\\b(${parseForRegex(value)})(?![^[\\]]*\\]{2})\\b`, 'gi')
     if (value.length > 0) {
       if (content.toUpperCase().includes(value.toUpperCase())) {
         content = content.replaceAll(regex, (match) => {
