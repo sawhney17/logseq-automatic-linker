@@ -8,6 +8,16 @@ let pageList: string[] = [];
 let blockArray: string[] = [];
 let dateFormat = "";
 
+async function fetchAliases() { //from https://github.com/sawhney17/logseq-smartblocks
+  let query = `
+  [:find (pull ?b [*])
+             :where
+             [?b :block/properties ?p]
+             [(get ?p :alias)]]
+  `;
+  let result = await logseq.DB.datascriptQuery(query)
+  return result.map((item) => item[0].properties.alias);
+}
 const settings: SettingSchemaDesc[] = [
   {
     key: "enableAutoParse",
@@ -67,6 +77,8 @@ async function getPages() {
       .map((x) => x[0]["original-name"]);
   });
 console.log(pageList);
+pageList.concat(await fetchAliases());
+
 }
 const parseForRegex = (s: string) => {
   return s
