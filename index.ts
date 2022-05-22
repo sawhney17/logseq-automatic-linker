@@ -66,6 +66,7 @@ async function getPages() {
       )
       .map((x) => x[0]["original-name"]);
   });
+console.log(pageList);
 }
 const parseForRegex = (s: string) => {
   return s
@@ -91,7 +92,6 @@ async function parseBlockForLink(d: string) {
   //handle escaped content
   let codeblockReversalTracker = [];
   let inlineCodeReversalTracker = [];
-  let reversalIndexTracker = 0;
 
   content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
     // reversalIndexTracker++;
@@ -115,7 +115,12 @@ async function parseBlockForLink(d: string) {
       )})(?![^[\\]]*\\]{2})\\b`,
       "gi"
     );
-    if (value.length > 0) {
+    const chineseRegex = new RegExp(`(?<!\\[)${parseForRegex(value)}(?!\\])`, "gm")
+    if (value.match(/^[\u4e00-\u9fa5]{0,}$/gm)){
+      content = content.replaceAll(chineseRegex, logseq.settings?.parseAsTags ? `#${value}`: `[[${value}]]`);
+      needsUpdate = true
+    }
+    else if (value.length > 0) {
       if (content.toUpperCase().includes(value.toUpperCase())) {
         content = content.replaceAll(regex, (match) => {
           const hasSpaces = /\s/g.test(match);
@@ -131,6 +136,7 @@ async function parseBlockForLink(d: string) {
         // setTimeout(() => { inProcess = false }, 300)
       }
     }
+    //if value is chinese 
   });
   // logseq.Editor.updateBlock(block.uuid, content)
 
