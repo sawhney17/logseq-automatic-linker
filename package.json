@@ -1,6 +1,6 @@
 {
   "name": "logseq-automatic-linker",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "A plugin to automatically create links. ",
   "main": "dist/index.html",
   "targets": {
@@ -14,7 +14,7 @@
   "author": "Aryan Sawhney",
   "license": "MIT",
   "dependencies": {
-    "@logseq/libs": "0.0.2",
+    "@logseq/libs": "0.0.6",
     "logseq-dateutils": "^0.0.21",
     "sherlockjs": "^1.4.2"
   },

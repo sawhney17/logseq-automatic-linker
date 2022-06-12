@@ -97,13 +97,14 @@ const parseForRegex = (s: string) => {
 
 async function parseBlockForLink(d: string) {
   let block = await logseq.Editor.getBlock(d);
-  let content = block.content.replaceAll(/{.*}/g, (match) => {
-    return getDateForPage(
-      Sherlock.parse(match.slice(1, -1)).startDate,
-      dateFormat
-    );
-  });
-
+  console.log(d)
+  // let content = block.content.replaceAll(/{.*}/g, (match) => {
+  //   return getDateForPage(
+  //     Sherlock.parse(match.slice(1, -1)).startDate,
+  //     dateFormat
+  //   );
+  // });
+  let content = block.content
   //handle escaped content
   let codeblockReversalTracker = [];
   let inlineCodeReversalTracker = [];
