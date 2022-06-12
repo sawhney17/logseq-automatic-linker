@@ -77,8 +77,8 @@ async function getPages() {
         (x) => !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
       )
       .map((x) => x[0]["original-name"]);
-      console.log(pageList)
-      pageList.concat(await fetchAliases());
+    console.log(pageList)
+    pageList.concat(await fetchAliases());
   });
 
 
@@ -96,75 +96,76 @@ const parseForRegex = (s: string) => {
 };
 
 async function parseBlockForLink(d: string) {
-  let block = await logseq.Editor.getBlock(d);
-  console.log(d)
-  // let content = block.content.replaceAll(/{.*}/g, (match) => {
-  //   return getDateForPage(
-  //     Sherlock.parse(match.slice(1, -1)).startDate,
-  //     dateFormat
-  //   );
-  // });
-  let content = block.content
-  //handle escaped content
-  let codeblockReversalTracker = [];
-  let inlineCodeReversalTracker = [];
+  if (d != null) {
+    let block = await logseq.Editor.getBlock(d);
+    console.log(block)
+    let content = block.content.replaceAll(/{.*}/g, (match) => {
+      return getDateForPage(
+        Sherlock.parse(match.slice(1, -1)).startDate,
+        dateFormat
+      );
+    });
+    //handle escaped content
+    let codeblockReversalTracker = [];
+    let inlineCodeReversalTracker = [];
 
-  content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
-    // reversalIndexTracker++;
-    codeblockReversalTracker.push(match);
-    return "wxhkjsdkdksjldfkjhsdfkncncn";
-  });
+    content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
+      // reversalIndexTracker++;
+      codeblockReversalTracker.push(match);
+      return "wxhkjsdkdksjldfkjhsdfkncncn";
+    });
 
-  content = content.replaceAll(/(?=`)`(?!`)[^`]*(?=`)`(?!`)/g, (match) => {
-    inlineCodeReversalTracker.push(match);
-    return "zmkjfndkfhkfhjkdfkjdlhfkdljfkjd";
-  });
+    content = content.replaceAll(/(?=`)`(?!`)[^`]*(?=`)`(?!`)/g, (match) => {
+      inlineCodeReversalTracker.push(match);
+      return "zmkjfndkfhkfhjkdfkjdlhfkdljfkjd";
+    });
 
-  //rmeove first and last letter from the result
-  let needsUpdate = false;
+    //rmeove first and last letter from the result
+    let needsUpdate = false;
 
-  pageList.forEach((value) => {
-    const regex = new RegExp(
-      `(\\w*(?<!\\[{2}[^[\\]]*)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))\\b(${parseForRegex(
-        value
-      )})(?![^[\\]]*\\]{2})\\b`,
-      "gi"
-    );
-    const chineseRegex = new RegExp(`(?<!\\[)${parseForRegex(value)}(?!\\])`, "gm")
-    if (value.match(/^[\u4e00-\u9fa5]{0,}$/gm)){
-      content = content.replaceAll(chineseRegex, logseq.settings?.parseAsTags ? `#${value}`: `[[${value}]]`);
-      needsUpdate = true
-    }
-    else if (value.length > 0) {
-      if (content.toUpperCase().includes(value.toUpperCase())) {
-        content = content.replaceAll(regex, (match) => {
-          const hasSpaces = /\s/g.test(match);
-          if (
-            logseq.settings?.parseAsTags ||
-            (logseq.settings?.parseSingleWordAsTag && !hasSpaces)
-          ) {
-            return hasSpaces ? `#[[${value}]]` : `#${value}`;
-          }
-          return `[[${value}]]`;
-        });
-        needsUpdate = true;
-        // setTimeout(() => { inProcess = false }, 300)
+    pageList.forEach((value) => {
+      const regex = new RegExp(
+        `(\\w*(?<!\\[{2}[^[\\]]*)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))\\b(${parseForRegex(
+          value
+        )})(?![^[\\]]*\\]{2})\\b`,
+        "gi"
+      );
+      const chineseRegex = new RegExp(`(?<!\\[)${parseForRegex(value)}(?!\\])`, "gm")
+      if (value.match(/^[\u4e00-\u9fa5]{0,}$/gm)) {
+        content = content.replaceAll(chineseRegex, logseq.settings?.parseAsTags ? `#${value}` : `[[${value}]]`);
+        needsUpdate = true
       }
+      else if (value.length > 0) {
+        if (content.toUpperCase().includes(value.toUpperCase())) {
+          content = content.replaceAll(regex, (match) => {
+            const hasSpaces = /\s/g.test(match);
+            if (
+              logseq.settings?.parseAsTags ||
+              (logseq.settings?.parseSingleWordAsTag && !hasSpaces)
+            ) {
+              return hasSpaces ? `#[[${value}]]` : `#${value}`;
+            }
+            return `[[${value}]]`;
+          });
+          needsUpdate = true;
+          // setTimeout(() => { inProcess = false }, 300)
+        }
+      }
+      //if value is chinese 
+    });
+    // logseq.Editor.updateBlock(block.uuid, content)
+
+    //re add the escaped content
+    codeblockReversalTracker?.forEach((value, index) => {
+      content = content.replaceAll(`wxhkjsdkdksjldfkjhsdfkncncn`, value);
+    });
+    inlineCodeReversalTracker?.forEach((value, index) => {
+      content = content.replaceAll(`zmkjfndkfhkfhjkdfkjdlhfkdljfkjd`, value);
+    });
+
+    if (needsUpdate) {
+      logseq.Editor.updateBlock(block.uuid, `${content}`);
     }
-    //if value is chinese 
-  });
-  // logseq.Editor.updateBlock(block.uuid, content)
-
-  //re add the escaped content
-  codeblockReversalTracker?.forEach((value, index) => {
-    content = content.replaceAll(`wxhkjsdkdksjldfkjhsdfkncncn`, value);
-  });
-  inlineCodeReversalTracker?.forEach((value, index) => {
-    content = content.replaceAll(`zmkjfndkfhkfhjkdfkjdlhfkdljfkjd`, value);
-  });
-
-  if (needsUpdate) {
-    logseq.Editor.updateBlock(block.uuid, `${content}`);
   }
 }
 
@@ -177,6 +178,7 @@ const main = async () => {
         blockArray?.forEach(parseBlockForLink);
       }
       console.log("enterClicked")
+      blockArray = [];
     } else {
       console.log("somethingChanged")
       //if blocks array doesn't already contain the block uuid, push to it
