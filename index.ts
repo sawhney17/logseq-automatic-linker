@@ -8,6 +8,7 @@ let pageList: string[] = [];
 let blockArray: string[] = [];
 let dateFormat = "";
 
+
 async function fetchAliases() { //from https://github.com/sawhney17/logseq-smartblocks
   let query = `
   [:find (pull ?b [*])
@@ -69,15 +70,17 @@ async function getPages() {
     .split(",")
     .map((x) => x.toUpperCase().trim());
   const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`;
-  logseq.DB.datascriptQuery(query).then((results) => {
+  logseq.DB.datascriptQuery(query).then(async (results) => {
+    console.log(results)
     pageList = results
       .filter(
         (x) => !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
       )
       .map((x) => x[0]["original-name"]);
+      console.log(pageList)
+      pageList.concat(await fetchAliases());
   });
-console.log(pageList);
-pageList.concat(await fetchAliases());
+
 
 }
 const parseForRegex = (s: string) => {
@@ -107,7 +110,6 @@ async function parseBlockForLink(d: string) {
 
   content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
     // reversalIndexTracker++;
-    console.log(codeblockReversalTracker);
     codeblockReversalTracker.push(match);
     return "wxhkjsdkdksjldfkjhsdfkncncn";
   });
@@ -153,10 +155,10 @@ async function parseBlockForLink(d: string) {
   // logseq.Editor.updateBlock(block.uuid, content)
 
   //re add the escaped content
-  codeblockReversalTracker.forEach((value, index) => {
+  codeblockReversalTracker?.forEach((value, index) => {
     content = content.replaceAll(`wxhkjsdkdksjldfkjhsdfkncncn`, value);
   });
-  inlineCodeReversalTracker.forEach((value, index) => {
+  inlineCodeReversalTracker?.forEach((value, index) => {
     content = content.replaceAll(`zmkjfndkfhkfhjkdfkjdlhfkdljfkjd`, value);
   });
 
@@ -171,9 +173,11 @@ const main = async () => {
   logseq.DB.onChanged((e) => {
     if (e.txMeta?.outlinerOp == "insertBlocks") {
       if (logseq.settings?.enableAutoParse) {
-        blockArray.forEach(parseBlockForLink);
+        blockArray?.forEach(parseBlockForLink);
       }
+      console.log("enterClicked")
     } else {
+      console.log("somethingChanged")
       //if blocks array doesn't already contain the block uuid, push to it
       const block = e.blocks[0].uuid;
       if (!blockArray.includes(block)) {
