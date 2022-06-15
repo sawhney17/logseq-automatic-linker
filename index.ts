@@ -99,8 +99,8 @@ const parseForRegex = (s: string) => {
     .replaceAll("^", "\\^")
     .replaceAll("$", "\\$")
     .replaceAll("|", "\\|")
-    // .replaceAll("\\", "\\\\")
-    // .replaceAll("/", "\\/")
+    .replaceAll("\\", "\\\\")
+    .replaceAll("/", "\\/")
     // .replaceAll(" ", "\\s+");
 };
 
