@@ -1,6 +1,6 @@
 {
   "name": "logseq-automatic-linker",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A plugin to automatically create links. ",
   "main": "dist/index.html",
   "targets": {

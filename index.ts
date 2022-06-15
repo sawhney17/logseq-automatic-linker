@@ -86,8 +86,8 @@ async function getPages() {
 const parseForRegex = (s: string) => {
 
   //Remove regex special characters from s
-  s = s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-
+  // s = s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+  s = s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 
   return s
     // .replaceAll("[", "\\[")
