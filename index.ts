@@ -102,8 +102,6 @@ const parseForRegex = (s: string) => {
     // .replaceAll("\\", "\\\\")
     // .replaceAll("/", "\\/")
     // .replaceAll(" ", "\\s+");
-
-
 };
 
 async function parseBlockForLink(d: string) {
@@ -141,6 +139,7 @@ async function parseBlockForLink(d: string) {
         )})(?![^[\\]]*\\]{2})\\b`,
         "gi"
       );
+      console.log(value)
       const chineseRegex = new RegExp(`(?<!\\[)${parseForRegex(value)}(?!\\])`, "gm")
       if (value.match(/^[\u4e00-\u9fa5]{0,}$/gm)) {
         content = content.replaceAll(chineseRegex, logseq.settings?.parseAsTags ? `#${value}` : `[[${value}]]`);
