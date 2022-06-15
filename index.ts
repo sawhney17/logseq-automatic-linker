@@ -84,25 +84,31 @@ async function getPages() {
 
 }
 const parseForRegex = (s: string) => {
+
+  //Remove regex special characters from s
+  s = s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+
+
   return s
-    .replaceAll("[", "\\[")
-    .replaceAll("]", "\\]")
-    .replaceAll(")", "\\)")
-    .replaceAll("(", "\\(")
-    .replaceAll("+", "\\+")
-    .replaceAll("-", "\\-")
-    .replaceAll("{", "\\{")
-    .replaceAll("}", "\\}")
-    .replaceAll("*", "\\*")
-    .replaceAll("?", "\\?")
-    .replaceAll(".", "\\.")
-    .replaceAll("^", "\\^")
-    .replaceAll("$", "\\$")
-    .replaceAll("|", "\\|")
-    .replaceAll("\\", "\\\\")
-    .replaceAll("/", "\\/")
+    // .replaceAll("[", "\\[")
+    // .replaceAll("]", "\\]")
+    // .replaceAll(")", "\\)")
+    // .replaceAll("(", "\\(")
+    // .replaceAll("+", "\\+")
+    // .replaceAll("-", "\\-")
+    // .replaceAll("{", "\\{")
+    // .replaceAll("}", "\\}")
+    // .replaceAll("*", "\\*")
+    // .replaceAll("?", "\\?")
+    // .replaceAll(".", "\\.")
+    // .replaceAll("^", "\\^")
+    // .replaceAll("$", "\\$")
+    // .replaceAll("|", "\\|")
+    // .replaceAll("\\", "\\\\")
+    // .replaceAll("/", "\\/")
     // .replaceAll(" ", "\\s+");
 };
+
 
 async function parseBlockForLink(d: string) {
   if (d != null) {
