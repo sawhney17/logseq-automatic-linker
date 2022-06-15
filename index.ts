@@ -92,7 +92,18 @@ const parseForRegex = (s: string) => {
     .replaceAll("+", "\\+")
     .replaceAll("-", "\\-")
     .replaceAll("{", "\\{")
-    .replaceAll("}", "\\}");
+    .replaceAll("}", "\\}")
+    .replaceAll("*", "\\*")
+    .replaceAll("?", "\\?")
+    .replaceAll(".", "\\.")
+    .replaceAll("^", "\\^")
+    .replaceAll("$", "\\$")
+    .replaceAll("|", "\\|")
+    // .replaceAll("\\", "\\\\")
+    // .replaceAll("/", "\\/")
+    // .replaceAll(" ", "\\s+");
+
+
 };
 
 async function parseBlockForLink(d: string) {
@@ -112,12 +123,12 @@ async function parseBlockForLink(d: string) {
     content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
       // reversalIndexTracker++;
       codeblockReversalTracker.push(match);
-      return "wxhkjsdkdksjldfkjhsdfkncncn";
+      return "wxhkjs";
     });
 
     content = content.replaceAll(/(?=`)`(?!`)[^`]*(?=`)`(?!`)/g, (match) => {
       inlineCodeReversalTracker.push(match);
-      return "zmkjfndkfhkfhjkdfkjdlhfkdljfkjd";
+      return "zmkjfnd";
     });
 
     //rmeove first and last letter from the result
