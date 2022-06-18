@@ -76,7 +76,8 @@ async function getPages() {
       .filter(
         (x) => !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
       )
-      .map((x) => x[0]["original-name"]);
+      .map((x) => x[0]["original-name"])
+      .filter((x) => x);
     console.log(pageList)
     pageList.concat(await fetchAliases());
   });
