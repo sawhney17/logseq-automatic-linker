@@ -14,3 +14,8 @@ Requires logseq version 0.67 and above to function properly
 3. Else, Use <kbd>Command</kbd>+<kbd>P</kbd> to parse the current block 
 4. Else, right click the bullet and click parse block for links
 5. Watch as the links are automatically made!!
+
+## Customization
+- Ignoring specific pages from being auto linked
+  1. Add a property. `automatic-ignore:: true`
+  2. This page, and all its aliases, will now be ignored from auto linking! (Thanks @trashhalo)
