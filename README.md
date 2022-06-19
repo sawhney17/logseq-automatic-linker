@@ -18,4 +18,4 @@ Requires logseq version 0.67 and above to function properly
 ## Customization
 - Ignoring specific pages from being auto linked
   1. Add a property. `automatic-ignore:: true`
-  2. This page, and all its aliases, will now be ignored from auto linking! (Thanks @trashhalo)
+  2. This page, and all its aliases, will now be ignored from auto linking! (Thanks [@trashhalo](https://github.com/trashhalo))
