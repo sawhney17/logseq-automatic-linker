@@ -8,7 +8,6 @@ let pageList: string[] = [];
 let blockArray: string[] = [];
 let dateFormat = "";
 
-
 async function fetchAliases() { //from https://github.com/sawhney17/logseq-smartblocks
   let query = `
   [:find (pull ?b [*])
@@ -19,6 +18,24 @@ async function fetchAliases() { //from https://github.com/sawhney17/logseq-smart
   let result = await logseq.DB.datascriptQuery(query)
   return result.map((item) => item[0].properties.alias);
 }
+
+async function fetchPropertyIgnoreList() {
+  let query = `
+  [:find (pull ?b [*])
+             :where
+             [?b :block/properties ?p]
+             [(get ?p :automatic-ignore)]]
+  `;
+  let result = await logseq.DB.datascriptQuery(query)
+  return result
+    .filter((item) => item[0]["original-name"] && item[0].properties['automatic-ignore'])
+    .map(item => [
+      item[0]["original-name"].toUpperCase(),
+      item[0].properties.alias?.map(alias => alias.toUpperCase()) ?? []
+    ].flat())
+    .flat()
+}
+
 const settings: SettingSchemaDesc[] = [
   {
     key: "enableAutoParse",
@@ -66,9 +83,12 @@ const settings: SettingSchemaDesc[] = [
 ];
 logseq.useSettingsSchema(settings);
 async function getPages() {
-  const pagesToIgnore = logseq.settings?.pagesToIgnore
+  const propertyBasedIgnoreList = await fetchPropertyIgnoreList();
+  let pagesToIgnore = logseq.settings?.pagesToIgnore
     .split(",")
-    .map((x) => x.toUpperCase().trim());
+    .map((x) => x.toUpperCase().trim())
+    .concat(propertyBasedIgnoreList);
+  pagesToIgnore = [...new Set(pagesToIgnore)];
   const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`;
   logseq.DB.datascriptQuery(query).then(async (results) => {
     console.log(results)
