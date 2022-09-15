@@ -130,6 +130,9 @@ const parseForRegex = (s: string) => {
     // .replaceAll(" ", "\\s+");
 };
 
+const CODE_BLOCK_PLACEHOLDER = "wxhkjsdkdksjldfkjhsdfkncncn"
+const INLINE_CODE_PLACEHOLDER = "zmkjfndkfhkfhjkdfkjdlhfkdljfkjd"
+
 
 async function parseBlockForLink(d: string) {
   if (d != null) {
@@ -148,12 +151,12 @@ async function parseBlockForLink(d: string) {
     content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
       // reversalIndexTracker++;
       codeblockReversalTracker.push(match);
-      return "wxhkjs";
+      return CODE_BLOCK_PLACEHOLDER;
     });
 
     content = content.replaceAll(/(?=`)`(?!`)[^`]*(?=`)`(?!`)/g, (match) => {
       inlineCodeReversalTracker.push(match);
-      return "zmkjfnd";
+      return INLINE_CODE_PLACEHOLDER;
     });
 
     //rmeove first and last letter from the result
@@ -188,16 +191,16 @@ async function parseBlockForLink(d: string) {
           // setTimeout(() => { inProcess = false }, 300)
         }
       }
-      //if value is chinese 
+      //if value is chinese
     });
     // logseq.Editor.updateBlock(block.uuid, content)
 
     //re add the escaped content
     codeblockReversalTracker?.forEach((value, index) => {
-      content = content.replaceAll(`wxhkjsdkdksjldfkjhsdfkncncn`, value);
+      content = content.replace(CODE_BLOCK_PLACEHOLDER, value);
     });
     inlineCodeReversalTracker?.forEach((value, index) => {
-      content = content.replaceAll(`zmkjfndkfhkfhjkdfkjdlhfkdljfkjd`, value);
+      content = content.replace(INLINE_CODE_PLACEHOLDER, value);
     });
 
     if (needsUpdate) {
