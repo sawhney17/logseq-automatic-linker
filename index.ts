@@ -91,14 +91,14 @@ async function getPages() {
   pagesToIgnore = [...new Set(pagesToIgnore)];
   const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`;
   logseq.DB.datascriptQuery(query).then(async (results) => {
-    console.log(results)
+    console.log({LogseqAutomaticLinker: "results", results})
     pageList = results
       .filter(
         (x) => !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
       )
       .map((x) => x[0]["original-name"])
       .filter((x) => x);
-    console.log(pageList)
+    console.log({LogseqAutomaticLinker: "pageList", pageList})
     pageList.concat(await fetchAliases());
   });
 
@@ -132,34 +132,47 @@ const parseForRegex = (s: string) => {
 
 const CODE_BLOCK_PLACEHOLDER = "wxhkjsdkdksjldfkjhsdfkncncn"
 const INLINE_CODE_PLACEHOLDER = "zmkjfndkfhkfhjkdfkjdlhfkdljfkjd"
+const PROPERTY_PLACEHOLDER = "aruldashdadqwlkjajdsklasjkldqwl"
 
 
 async function parseBlockForLink(d: string) {
   if (d != null) {
     let block = await logseq.Editor.getBlock(d);
-    console.log(block)
+    console.log({LogseqAutomaticLinker: "block", block})
+    if (block == null) {
+      return
+    }
+
     let content = block.content.replaceAll(/{.*}/g, (match) => {
       return getDateForPage(
         Sherlock.parse(match.slice(1, -1)).startDate,
         dateFormat
       );
     });
-    //handle escaped content
+
+    // Handle content that should not be automatically linked
     let codeblockReversalTracker = [];
     let inlineCodeReversalTracker = [];
+    let propertyTracker = [];
 
     content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
-      // reversalIndexTracker++;
       codeblockReversalTracker.push(match);
+      console.log({LogseqAutomaticLinker: "code block found", match})
       return CODE_BLOCK_PLACEHOLDER;
     });
 
     content = content.replaceAll(/(?=`)`(?!`)[^`]*(?=`)`(?!`)/g, (match) => {
       inlineCodeReversalTracker.push(match);
+      console.log({LogseqAutomaticLinker: "inline code found", match})
       return INLINE_CODE_PLACEHOLDER;
     });
 
-    //rmeove first and last letter from the result
+    content = content.replaceAll(/ *[^\s]+:: /g, (match) => {
+      propertyTracker.push(match);
+      console.log({LogseqAutomaticLinker: "property found", match})
+      return PROPERTY_PLACEHOLDER;
+    });
+
     let needsUpdate = false;
 
     pageList.forEach((value) => {
@@ -169,7 +182,7 @@ async function parseBlockForLink(d: string) {
         )})(?![^[\\]]*\\]{2})\\b`,
         "gi"
       );
-      console.log(value)
+      // console.log({LogseqAutomaticLinker: "value", value})
       const chineseRegex = new RegExp(`(?<!\\[)${parseForRegex(value)}(?!\\])`, "gm")
       if (value.match(/^[\u4e00-\u9fa5]{0,}$/gm)) {
         content = content.replaceAll(chineseRegex, logseq.settings?.parseAsTags ? `#${value}` : `[[${value}]]`);
@@ -193,14 +206,16 @@ async function parseBlockForLink(d: string) {
       }
       //if value is chinese
     });
-    // logseq.Editor.updateBlock(block.uuid, content)
 
-    //re add the escaped content
+    // Restore content that should not be automatically linked
     codeblockReversalTracker?.forEach((value, index) => {
       content = content.replace(CODE_BLOCK_PLACEHOLDER, value);
     });
     inlineCodeReversalTracker?.forEach((value, index) => {
       content = content.replace(INLINE_CODE_PLACEHOLDER, value);
+    });
+    propertyTracker?.forEach((value, index) => {
+      content = content.replace(PROPERTY_PLACEHOLDER, value);
     });
 
     if (needsUpdate) {
@@ -217,10 +232,10 @@ const main = async () => {
       if (logseq.settings?.enableAutoParse) {
         blockArray?.forEach(parseBlockForLink);
       }
-      console.log("enterClicked")
+      // console.log({LogseqAutomaticLinker: "Enter pressed"})
       blockArray = [];
     } else {
-      console.log("somethingChanged")
+      // console.log({LogseqAutomaticLinker: "Something changed"})
       //if blocks array doesn't already contain the block uuid, push to it
       const block = e.blocks[0].uuid;
       if (!blockArray.includes(block)) {
