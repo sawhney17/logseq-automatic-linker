@@ -22,7 +22,7 @@ describe("replaceContentWithPageLinks()", () => {
       false
     );
     expect(content).toBe(
-      "[[page]] before\n`page inside inline code`\n[[page]] between\n`another page inline`\n[[page]] after"
+      "[[Page]] before\n`page inside inline code`\n[[page]] between\n`another page inline`\n[[page]] after"
     );
     expect(update).toBe(true);
   });
@@ -92,5 +92,43 @@ describe("replaceContentWithPageLinks()", () => {
     );
     expect(content).toBe("This text doesn't have any links to be parsed");
     expect(update).toBe(false);
+  });
+
+  it("should keep the original input case for lowercase pages", () => {
+    let [content, update] = replaceContentWithPageLinks(
+      ["when", "for pages", "because", "links", "logseq"],
+      `When creating links, the original case that was typed should be preserved
+      for PAGES that only have lowercase words.
+      Because logSEQ LINKS are case-insensitive anyway.`,
+      false,
+      false
+    );
+    expect(content).toBe(
+      `[[When]] creating [[links]], the original case that was typed should be preserved
+      [[for PAGES]] that only have lowercase words.
+      [[Because]] [[logSEQ]] [[LINKS]] are case-insensitive anyway.`
+    );
+    expect(update).toBe(true);
+  });
+
+  it("should disregard the input case and use the page case for uppercase, title case and mixed case pages", () => {
+    let [content, update] = replaceContentWithPageLinks(
+      ["John Doe", "Mary Doe", "ANYWAY", "Logseq", "But"],
+      `When creating links, the page case should be used when it's not lowercase.
+      So things like names are properly capitalised even when typed in lowercase: john doe, mary doe.
+      logseq LINKS are case-insensitive anyway.
+      but LOGSEQ will keep the case of pages that are uppercase or title case when displaying,
+      even if you type them in lowercase`,
+      false,
+      false
+    );
+    expect(content).toBe(
+      `When creating links, the page case should be used when it's not lowercase.
+      So things like names are properly capitalised even when typed in lowercase: [[John Doe]], [[Mary Doe]].
+      [[Logseq]] LINKS are case-insensitive [[ANYWAY]].
+      [[But]] [[Logseq]] will keep the case of pages that are uppercase or title case when displaying,
+      even if you type them in lowercase`
+    );
+    expect(update).toBe(true);
   });
 });

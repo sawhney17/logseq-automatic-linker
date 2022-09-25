@@ -68,32 +68,37 @@ export function replaceContentWithPageLinks(
   });
 
   let needsUpdate = false;
-  allPages.forEach((value) => {
+  allPages.forEach((page) => {
     const regex = new RegExp(
       `(\\w*(?<!\\[{2}[^[\\]]*)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))\\b(${parseForRegex(
-        value
+        page
       )})(?![^[\\]]*\\]{2})\\b`,
       "gi"
     );
     // console.log({LogseqAutomaticLinker: "value", value})
     const chineseRegex = new RegExp(
-      `(?<!\\[)${parseForRegex(value)}(?!\\])`,
+      `(?<!\\[)${parseForRegex(page)}(?!\\])`,
       "gm"
     );
-    if (value.match(/^[\u4e00-\u9fa5]{0,}$/gm)) {
+    if (page.match(/^[\u4e00-\u9fa5]{0,}$/gm)) {
       content = content.replaceAll(
         chineseRegex,
-        parseAsTags ? `#${value}` : `[[${value}]]`
+        parseAsTags ? `#${page}` : `[[${page}]]`
       );
       needsUpdate = true;
-    } else if (value.length > 0) {
-      if (content.toUpperCase().includes(value.toUpperCase())) {
+    } else if (page.length > 0) {
+      if (content.toUpperCase().includes(page.toUpperCase())) {
         content = content.replaceAll(regex, (match) => {
           const hasSpaces = /\s/g.test(match);
+
+          // If page is lowercase, keep the original case of the input (match);
+          // Otherwise, use the page case
+          let whichCase = page == page.toLowerCase() ? match : page;
+
           if (parseAsTags || (parseSingleWordAsTag && !hasSpaces)) {
-            return hasSpaces ? `#[[${value}]]` : `#${value}`;
+            return hasSpaces ? `#[[${whichCase}]]` : `#${whichCase}`;
           }
-          return `[[${value}]]`;
+          return `[[${whichCase}]]`;
         });
         needsUpdate = true;
         // setTimeout(() => { inProcess = false }, 300)
