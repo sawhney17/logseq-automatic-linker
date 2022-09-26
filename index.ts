@@ -130,9 +130,11 @@ const parseForRegex = (s: string) => {
     // .replaceAll(" ", "\\s+");
 };
 
-const CODE_BLOCK_PLACEHOLDER = "wxhkjsdkdksjldfkjhsdfkncncn"
-const INLINE_CODE_PLACEHOLDER = "zmkjfndkfhkfhjkdfkjdlhfkdljfkjd"
-const PROPERTY_PLACEHOLDER = "aruldashdadqwlkjajdsklasjkldqwl"
+// Use random UUIDs instead of manually generated strings
+const CODE_BLOCK_PLACEHOLDER = "71e46a9e-1150-49c3-a04b-0491ebe05922"
+const INLINE_CODE_PLACEHOLDER = "164b97c2-beb7-4204-99b4-6ec2ddc93f9c"
+const PROPERTY_PLACEHOLDER = "50220b1c-63f0-4f57-aa73-08c4d936a419"
+const MARKDOWN_LINK_PLACEHOLDER = "53c65a4a-137d-44a8-8849-8ec6ca411942"
 
 
 async function parseBlockForLink(d: string) {
@@ -154,6 +156,7 @@ async function parseBlockForLink(d: string) {
     let codeblockReversalTracker = [];
     let inlineCodeReversalTracker = [];
     let propertyTracker = [];
+    let markdownLinkTracker = [];
 
     content = content.replaceAll(/```(.|\n)*```/gim, (match) => {
       codeblockReversalTracker.push(match);
@@ -171,6 +174,14 @@ async function parseBlockForLink(d: string) {
       propertyTracker.push(match);
       console.log({LogseqAutomaticLinker: "property found", match})
       return PROPERTY_PLACEHOLDER;
+    });
+
+    // Broken Markdown links with nested pages won't be detected by this regex and have to be fixed manually.
+    // Example: [[[page]] This is a broken Markdown link](http://example.com)
+    content = content.replaceAll(/\[[^\[\]]+\]\([^\(\)]+\)/g, (match) => {
+      markdownLinkTracker.push(match);
+      console.log({LogseqAutomaticLinker: "Markdown link found", match})
+      return MARKDOWN_LINK_PLACEHOLDER;
     });
 
     let needsUpdate = false;
@@ -216,6 +227,9 @@ async function parseBlockForLink(d: string) {
     });
     propertyTracker?.forEach((value, index) => {
       content = content.replace(PROPERTY_PLACEHOLDER, value);
+    });
+    markdownLinkTracker?.forEach((value, index) => {
+      content = content.replace(MARKDOWN_LINK_PLACEHOLDER, value);
     });
 
     if (needsUpdate) {
