@@ -1,6 +1,7 @@
 > If this plugin helps you, I'd really appreciate your support. You can [buy me a coffee here. ](https://www.buymeacoffee.com/sawhney17)
 
----
+![GitHub all releases](https://img.shields.io/github/downloads/sawhney17/logseq-automatic-linker/total)
+
 
 # Automatic Linker for Logseq
 
