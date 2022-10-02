@@ -18,7 +18,9 @@ async function fetchAliases() {
              [(get ?p :alias)]]
   `;
   let result = await logseq.DB.datascriptQuery(query);
-  return result.map((item) => item[0].properties.alias);
+  let resultMap = result.map((item) => item[0].properties.alias);
+  console.log({ LogseqAutomaticLinker: "fetchAliases", result, resultMap });
+  return resultMap;
 }
 
 async function fetchPropertyIgnoreList() {
@@ -98,25 +100,25 @@ async function getPages() {
   pagesToIgnore = [...new Set(pagesToIgnore)];
   const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`;
   logseq.DB.datascriptQuery(query).then(async (results) => {
-    console.debug({ LogseqAutomaticLinker: "results", results });
     pageList = results
       .filter(
         (x) => !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
       )
       .map((x) => x[0]["original-name"])
       .filter((x) => x);
-    console.debug({ LogseqAutomaticLinker: "pageList", pageList });
     pageList.concat(await fetchAliases());
+    console.log({ LogseqAutomaticLinker: "getPages", results, pageList });
   });
 }
 
 async function parseBlockForLink(d: string) {
   if (d != null) {
     let block = await logseq.Editor.getBlock(d);
-    console.debug({ LogseqAutomaticLinker: "block", block });
     if (block == null) {
       return;
     }
+
+    console.log({ LogseqAutomaticLinker: "parseBlockForLink", block });
 
     let content = block.content.replaceAll(/{.*}/g, (match) => {
       return getDateForPage(
@@ -146,10 +148,10 @@ const main = async () => {
       if (logseq.settings?.enableAutoParse) {
         blockArray?.forEach(parseBlockForLink);
       }
-      console.log({ LogseqAutomaticLinker: "Enter pressed" });
+      console.debug({ LogseqAutomaticLinker: "Enter pressed" });
       blockArray = [];
     } else {
-      // console.debug({ LogseqAutomaticLinker: "Something changed" });
+      console.debug({ LogseqAutomaticLinker: "Something changed" });
       //if blocks array doesn't already contain the block uuid, push to it
       const block = e.blocks[0].uuid;
       if (!blockArray.includes(block)) {
