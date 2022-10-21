@@ -107,6 +107,8 @@ async function getPages() {
       .map((x) => x[0]["original-name"])
       .filter((x) => x);
     pageList.concat(await fetchAliases());
+    //Reverse sort pagelist on the basis of length so that longer page names are matched first
+    pageList.sort((a, b) => b.length - a.length);
     console.log({ LogseqAutomaticLinker: "getPages", results, pageList });
   });
 }
