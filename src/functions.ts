@@ -70,9 +70,9 @@ export function replaceContentWithPageLinks(
   let needsUpdate = false;
   allPages.forEach((page) => {
     const regex = new RegExp(
-      `(\\w*(?<!\\[{2}[^[\\]]*)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))\\b(${parseForRegex(
+      `(\\w*(?<!\\[{2}[^[\\]]*)\\w*(?<!\\#)\\w*(?<!\\w+:\\/\\/\\S*))(?<=[\\s,.:;"']|^)(${parseForRegex(
         page
-      )})(?![^[\\]]*\\]{2})\\b`,
+      )})(?![^[\\]]*\\]{2})(?=[\\s,.:;"']|$)`,
       "gi"
     );
     // console.log({LogseqAutomaticLinker: "value", value})

@@ -131,4 +131,16 @@ describe("replaceContentWithPageLinks()", () => {
     );
     expect(update).toBe(true);
   });
+
+  it("should detect Unicode links", () => {
+    let [content, update] = replaceContentWithPageLinks(
+      ["가나다"],
+      `This block implicitly contains unicode words like 가나다.`,
+      false,
+      false
+    );
+    expect(content).toBe(
+      `This block implicitly contains unicode words like [[가나다]].`
+    );
+  });
 });
