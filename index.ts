@@ -18,7 +18,10 @@ async function fetchAliases() {
              [(get ?p :alias)]]
   `;
   let result = await logseq.DB.datascriptQuery(query);
-  let resultMap = result.map((item) => item[0].properties.alias);
+  let resultMap = result
+  .map((item) => item[0].properties.alias) // Extract aliases
+  .filter((alias) => alias !== ""); // Exclude empty aliases
+  
   console.log({ LogseqAutomaticLinker: "fetchAliases", result, resultMap });
   return resultMap;
 }
