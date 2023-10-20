@@ -186,9 +186,7 @@ const main = async () => {
     { binding: logseq.settings?.parseSingleBlockKeybinding },
     (e) => {
       getPages();
-      if (!logseq.settings?.enableAutoParse) {
-        parseBlockForLink(e.uuid);
-      }
+      parseBlockForLink(e.uuid);
     }
   );
 };
