@@ -48,3 +48,16 @@ After every change you make in the code:
 To run tests:
 
     yarn test
+
+
+## Thank you
+Thank you to all contributors to the project!
+- @jwoo0122
+- @adxsoft
+- @falense
+- @andreoliwa
+- @jjaychen1e
+- @trashhalo
+- @Laptop765
+- @robotii
+- @mortein
