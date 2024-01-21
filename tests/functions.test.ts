@@ -143,4 +143,28 @@ describe("replaceContentWithPageLinks()", () => {
       `This block implicitly contains unicode words like [[가나다]].`
     );
   });
+
+  it("should replace links made up of CJKV characters", () => {
+    let [content, update] = replaceContentWithPageLinks(
+      ["书架"],
+      `This block implicitly contains CJKV words like 书架.`,
+      false,
+      false
+    );
+    expect(content).toBe(
+      `This block implicitly contains CJKV words like [[书架]].`
+    );
+  });
+
+  it("should replace links made up of CJKV characters with tags", () => {
+    let [content, update] = replaceContentWithPageLinks(
+      ["书架"],
+      `This block implicitly contains CJKV words like 书架.`,
+      true,
+      false
+    );
+    expect(content).toBe(
+      `This block implicitly contains CJKV words like #书架.`
+    );
+  });
 });
