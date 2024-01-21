@@ -3,6 +3,18 @@ const CODE_BLOCK_PLACEHOLDER = "71e46a9e-1150-49c3-a04b-0491ebe05922";
 const INLINE_CODE_PLACEHOLDER = "164b97c2-beb7-4204-99b4-6ec2ddc93f9c";
 const PROPERTY_PLACEHOLDER = "50220b1c-63f0-4f57-aa73-08c4d936a419";
 const MARKDOWN_LINK_PLACEHOLDER = "53c65a4a-137d-44a8-8849-8ec6ca411942";
+const MARKER_PLACEHOLDERS = {
+  NOW: "2f112da4-9248-4e2d-84d5-d9488291799f",
+  LATER: "be8228a3-8d31-4592-b0a5-aa43ce1cab05",
+  DOING: "36080c19-b7d7-4397-8ecf-2bcf670d0204",
+  DONE: "8d03ffae-c539-48da-891a-3020a18812f1",
+  CANCELED: "774f1b24-7533-4c86-93b2-ab4c2cd43b7d",
+  CANCELLED: "7b6a5608-b554-489b-97a3-f9043e436903",
+  "IN-PROGRESS": "842916b9-3f8e-4fd7-8490-6015a30a1dce",
+  TODO: "1f5dc7a6-9479-4692-9f67-8034088395b5",
+  WAIT: "d7a8bdf1-1336-4538-b35b-14459e50046e",
+  WAITING: "d9c67fde-12ae-41e5-9f70-9959c172154b",
+};
 
 const parseForRegex = (s: string) => {
   //Remove regex special characters from s
@@ -67,6 +79,15 @@ export function replaceContentWithPageLinks(
     return MARKDOWN_LINK_PLACEHOLDER;
   });
 
+  // Replace todo markers with placeholders
+  content = content.replaceAll(
+    /^(NOW|LATER|DOING|DONE|CANCELED|CANCELLED|IN-PROGRESS|TODO|WAIT|WAITING)/gm,
+    (match) => {
+      console.debug({ LogseqAutomaticLinker: "To Do marker found", match });
+      return MARKER_PLACEHOLDERS[match];
+    }
+  );
+
   let needsUpdate = false;
   allPages.forEach((page) => {
     const regex = new RegExp(
@@ -119,6 +140,9 @@ export function replaceContentWithPageLinks(
   });
   markdownLinkTracker?.forEach((value, index) => {
     content = content.replace(MARKDOWN_LINK_PLACEHOLDER, value);
+  });
+  Object.entries(MARKER_PLACEHOLDERS).forEach(([marker, markerPlaceholder]) => {
+    content = content.replaceAll(markerPlaceholder, marker);
   });
 
   return [content, needsUpdate];
