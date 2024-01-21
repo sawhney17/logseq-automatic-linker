@@ -61,7 +61,7 @@ export function replaceContentWithPageLinks(
 
   // Broken Markdown links with nested pages won't be detected by this regex and have to be fixed manually.
   // Example: [[[page]] This is a broken Markdown link](http://example.com)
-  content = content.replaceAll(/\[[^\[\]]+\]\([^\(\)]+\)/g, (match) => {
+  content = content.replaceAll(/\[(([^\[\]]|\\\[|\\\])+)\]\(.*\)/g, (match) => {
     markdownLinkTracker.push(match);
     console.debug({ LogseqAutomaticLinker: "Markdown link found", match });
     return MARKDOWN_LINK_PLACEHOLDER;

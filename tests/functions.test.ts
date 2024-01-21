@@ -46,15 +46,17 @@ describe("replaceContentWithPageLinks()", () => {
 
   it("should preserve Markdown links", () => {
     let [content, update] = replaceContentWithPageLinks(
-      ["page", "link"],
+      ["page", "link", "Logseq"],
       `This page has a link: [page link will not be touched](http://a.com)
-      [another page](http://b.com) also with a link`,
+      [another page](http://b.com) also with a link
+      [\\[This\\] is a Logseq page](https://logseq.com)`,
       false,
       false
     );
     expect(content).toBe(
       `This [[page]] has a [[link]]: [page link will not be touched](http://a.com)
-      [another page](http://b.com) also with a [[link]]`
+      [another page](http://b.com) also with a [[link]]
+      [\\[This\\] is a Logseq page](https://logseq.com)`
     );
     expect(update).toBe(true);
   });
