@@ -59,6 +59,65 @@ describe("replaceContentWithPageLinks()", () => {
     expect(update).toBe(true);
   });
 
+  it.each([
+    {
+      input: "NOW [#A] A started todo",
+      expected: "NOW [#A] A started [[todo]]",
+    },
+    {
+      input: "LATER [#B] A todo for later",
+      expected: "LATER [#B] A [[todo]] for later",
+    },
+    {
+      input: "DOING [#A] Fix the todo marker issue",
+      expected: "DOING [#A] Fix the [[todo]] marker issue",
+    },
+    { input: "DONE A done todo", expected: "DONE A done [[todo]]" },
+    {
+      input: "CANCELED A canceled todo",
+      expected: "CANCELED A canceled [[todo]]",
+    },
+    {
+      input: "CANCELLED A cancelled todo",
+      expected: "CANCELLED A cancelled [[todo]]",
+    },
+    {
+      input: "IN-PROGRESS An in progress To Do",
+      expected: "IN-PROGRESS An in progress [[To Do]]",
+    },
+    { input: "TODO A todo", expected: "TODO A [[todo]]" },
+    {
+      input: "WAIT [#C] A todo waiting for later",
+      expected: "WAIT [#C] A [[todo]] waiting for later",
+    },
+    {
+      input: "WAITING A waiting todo",
+      expected: "WAITING A waiting [[todo]]",
+    },
+  ])("should preserve the to do marker for $input", ({ input, expected }) => {
+    let [content, update] = replaceContentWithPageLinks(
+      [
+        "Now",
+        "Later",
+        "Doing",
+        "Done",
+        "Canceled",
+        "Cancelled",
+        "In Progress",
+        "In-Progress",
+        "To Do",
+        "todo",
+        "Wait",
+        "Waiting",
+      ],
+      input,
+      false,
+      false
+    );
+    expect(content).toBe(expected);
+    expect(update).toBe(true);
+  });
+
   it("should output tags when parseAsTags is configured", () => {
     let [content, update] = replaceContentWithPageLinks(
       ["page", "multiple words"],
