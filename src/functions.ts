@@ -15,6 +15,7 @@ const MARKER_PLACEHOLDERS = {
   WAIT: "d7a8bdf1-1336-4538-b35b-14459e50046e",
   WAITING: "d9c67fde-12ae-41e5-9f70-9959c172154b",
 };
+const CUSTOM_QUERY_PLACEHOLDER = "3cf737a1-1a29-4dd1-8db5-45effa23c810";
 
 const parseForRegex = (s: string) => {
   //Remove regex special characters from s
@@ -48,10 +49,11 @@ export function replaceContentWithPageLinks(
   parseSingleWordAsTag: boolean
 ): [string, boolean] {
   // Handle content that should not be automatically linked
-  let codeblockReversalTracker = [];
-  let inlineCodeReversalTracker = [];
-  let propertyTracker = [];
-  let markdownLinkTracker = [];
+  const codeblockReversalTracker = [];
+  const inlineCodeReversalTracker = [];
+  const propertyTracker = [];
+  const markdownLinkTracker = [];
+  const customQueryTracker = [];
 
   content = content.replaceAll(/```([^`]|\n)*```/gim, (match) => {
     codeblockReversalTracker.push(match);
@@ -73,7 +75,7 @@ export function replaceContentWithPageLinks(
 
   // Broken Markdown links with nested pages won't be detected by this regex and have to be fixed manually.
   // Example: [[[page]] This is a broken Markdown link](http://example.com)
-  content = content.replaceAll(/\[[^\[\]]+\]\([^\(\)]+\)/g, (match) => {
+  content = content.replaceAll(/\[(([^\[\]]|\\\[|\\\])+)\]\(.*\)/g, (match) => {
     markdownLinkTracker.push(match);
     console.debug({ LogseqAutomaticLinker: "Markdown link found", match });
     return MARKDOWN_LINK_PLACEHOLDER;
@@ -85,6 +87,13 @@ export function replaceContentWithPageLinks(
     (match) => {
       console.debug({ LogseqAutomaticLinker: "To Do marker found", match });
       return MARKER_PLACEHOLDERS[match];
+
+  content = content.replaceAll(
+    /#\+BEGIN_QUERY((?!#\+END_QUERY).|\n)*#\+END_QUERY/gim,
+    (match) => {
+      customQueryTracker.push(match);
+      console.debug({ LogseqAutomaticLinker: "Custom query found", match });
+      return CUSTOM_QUERY_PLACEHOLDER;
     }
   );
 
@@ -143,6 +152,10 @@ export function replaceContentWithPageLinks(
   });
   Object.entries(MARKER_PLACEHOLDERS).forEach(([marker, markerPlaceholder]) => {
     content = content.replaceAll(markerPlaceholder, marker);
+  });
+
+  customQueryTracker?.forEach((value, index) => {
+    content = content.replace(CUSTOM_QUERY_PLACEHOLDER, value);
   });
 
   return [content, needsUpdate];
