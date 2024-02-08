@@ -3,6 +3,7 @@ const CODE_BLOCK_PLACEHOLDER = "71e46a9e-1150-49c3-a04b-0491ebe05922";
 const INLINE_CODE_PLACEHOLDER = "164b97c2-beb7-4204-99b4-6ec2ddc93f9c";
 const PROPERTY_PLACEHOLDER = "50220b1c-63f0-4f57-aa73-08c4d936a419";
 const MARKDOWN_LINK_PLACEHOLDER = "53c65a4a-137d-44a8-8849-8ec6ca411942";
+const CUSTOM_QUERY_PLACEHOLDER = "3cf737a1-1a29-4dd1-8db5-45effa23c810";
 
 const parseForRegex = (s: string) => {
   //Remove regex special characters from s
@@ -36,10 +37,11 @@ export function replaceContentWithPageLinks(
   parseSingleWordAsTag: boolean
 ): [string, boolean] {
   // Handle content that should not be automatically linked
-  let codeblockReversalTracker = [];
-  let inlineCodeReversalTracker = [];
-  let propertyTracker = [];
-  let markdownLinkTracker = [];
+  const codeblockReversalTracker = [];
+  const inlineCodeReversalTracker = [];
+  const propertyTracker = [];
+  const markdownLinkTracker = [];
+  const customQueryTracker = [];
 
   content = content.replaceAll(/```([^`]|\n)*```/gim, (match) => {
     codeblockReversalTracker.push(match);
@@ -66,6 +68,15 @@ export function replaceContentWithPageLinks(
     console.debug({ LogseqAutomaticLinker: "Markdown link found", match });
     return MARKDOWN_LINK_PLACEHOLDER;
   });
+
+  content = content.replaceAll(
+    /#\+BEGIN_QUERY((?!#\+END_QUERY).|\n)*#\+END_QUERY/gim,
+    (match) => {
+      customQueryTracker.push(match);
+      console.debug({ LogseqAutomaticLinker: "Custom query found", match });
+      return CUSTOM_QUERY_PLACEHOLDER;
+    }
+  );
 
   let needsUpdate = false;
   allPages.forEach((page) => {
@@ -119,6 +130,10 @@ export function replaceContentWithPageLinks(
   });
   markdownLinkTracker?.forEach((value, index) => {
     content = content.replace(MARKDOWN_LINK_PLACEHOLDER, value);
+  });
+
+  customQueryTracker?.forEach((value, index) => {
+    content = content.replace(CUSTOM_QUERY_PLACEHOLDER, value);
   });
 
   return [content, needsUpdate];

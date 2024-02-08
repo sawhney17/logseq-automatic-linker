@@ -59,6 +59,75 @@ describe("replaceContentWithPageLinks()", () => {
     expect(update).toBe(true);
   });
 
+  it("should preserve custom query scripts", () => {
+    const customQueries = [
+      `#+BEGIN_QUERY
+    {
+      :title [:h2 "In Progress"]
+      :query [
+        :find (pull ?b [*])
+        :where
+          [?b :block/uuid]
+          [?b :block/marker ?marker]
+           [(contains? #{"NOW", "DOING", "IN PROGRESS", "IN-PROGRESS"} ?marker)]
+      ]
+      :result-transform (
+        fn [result] ( sort-by ( 
+          fn [item] ( get item :block/priority "Z" )
+        )
+        result)
+      )
+      :remove-block-children? false
+      :group-by-page? false
+      :breadcrumb-show? false
+      :collapsed? false
+    }
+    #+END_QUERY`,
+      `#+BEGIN_QUERY
+    {
+      :title [:h2 "TO DO"]
+      :query [
+        :find (pull ?b [*])
+        :where
+          [?b :block/uuid]
+          [?b :block/marker ?marker]
+           [(contains? #{"TO DO", "LATER"} ?marker)]
+      ]
+      :result-transform (
+        fn [result] ( sort-by ( 
+          fn [item] ( get item :block/priority "Z" )
+        )
+        result)
+      )
+      :remove-block-children? false
+      :group-by-page? false
+      :breadcrumb-show? false
+      :collapsed? false
+    }
+    #+END_QUERY`,
+    ];
+
+    const [content, update] = replaceContentWithPageLinks(
+      ["In Progress", "find", "link"],
+      `${customQueries[0]}
+      
+      Ths sentence contains a link
+      
+      ${customQueries[1]}`,
+      false,
+      false
+    );
+
+    expect(content).toEqual(
+      `${customQueries[0]}
+      
+      Ths sentence contains a [[link]]
+      
+      ${customQueries[1]}`
+    );
+    expect(update).toBe(true);
+  });
+
   it("should output tags when parseAsTags is configured", () => {
     let [content, update] = replaceContentWithPageLinks(
       ["page", "multiple words"],
