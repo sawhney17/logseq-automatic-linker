@@ -87,6 +87,8 @@ export function replaceContentWithPageLinks(
     (match) => {
       console.debug({ LogseqAutomaticLinker: "To Do marker found", match });
       return MARKER_PLACEHOLDERS[match];
+    }
+  );
 
   content = content.replaceAll(
     /#\+BEGIN_QUERY((?!#\+END_QUERY).|\n)*#\+END_QUERY/gim,
