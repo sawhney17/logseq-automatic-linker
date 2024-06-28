@@ -55,13 +55,13 @@ export function replaceContentWithPageLinks(
   const markdownLinkTracker = [];
   const customQueryTracker = [];
 
-  content = content.replaceAll(/```([^`]|\n)*```/gim, (match) => {
+  content = content.replaceAll(/```[\s\S]*?```/g, (match) => {
     codeblockReversalTracker.push(match);
     console.debug({ LogseqAutomaticLinker: "code block found", match });
     return CODE_BLOCK_PLACEHOLDER;
   });
 
-  content = content.replaceAll(/(?=`)`(?!`)[^`]*(?=`)`(?!`)/g, (match) => {
+  content = content.replaceAll(/`[^`]*`/g, (match) => {
     inlineCodeReversalTracker.push(match);
     console.debug({ LogseqAutomaticLinker: "inline code found", match });
     return INLINE_CODE_PLACEHOLDER;
