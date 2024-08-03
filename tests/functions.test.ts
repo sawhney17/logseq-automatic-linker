@@ -4,12 +4,12 @@ describe("replaceContentWithPageLinks()", () => {
   it("should preserve code blocks", () => {
     let [content, update] = replaceContentWithPageLinks(
       ["page"],
-      "page before ```\npage within code block\n```\npage between\n```\nanother page within code block\n```\npage after",
+      "page before ```\npage within code block\n```\npage between\n```\nanother page within code block```\nand finally\n```\nwith `single` backticks and page within\n```\npage after",
       false,
       false
     );
     expect(content).toBe(
-      "[[page]] before ```\npage within code block\n```\n[[page]] between\n```\nanother page within code block\n```\n[[page]] after"
+      "[[page]] before ```\npage within code block\n```\n[[page]] between\n```\nanother page within code block```\nand finally\n```\nwith `single` backticks and page within\n```\n[[page]] after"
     );
     expect(update).toBe(true);
   });
@@ -17,12 +17,12 @@ describe("replaceContentWithPageLinks()", () => {
   it("should preserve inline code", () => {
     let [content, update] = replaceContentWithPageLinks(
       ["page"],
-      "Page before\n`page inside inline code`\npage between\n`another page inline`\npage after",
+      "Page before\n`page inside inline code`\npage between\n`another page inline`\n`but not page if inline\nblock is split between newlines`\npage after",
       false,
       false
     );
     expect(content).toBe(
-      "[[Page]] before\n`page inside inline code`\n[[page]] between\n`another page inline`\n[[page]] after"
+      "[[Page]] before\n`page inside inline code`\n[[page]] between\n`another page inline`\n`but not page if inline\nblock is split between newlines`\n[[page]] after"
     );
     expect(update).toBe(true);
   });
