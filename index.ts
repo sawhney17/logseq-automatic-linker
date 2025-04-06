@@ -149,6 +149,7 @@ const main = async () => {
   getPages();
   dateFormat = (await logseq.App.getUserConfigs()).preferredDateFormat;
   logseq.DB.onChanged((e) => {
+    if (e.txMeta?.["skipRefresh?"] === true) return;
     if (e.txMeta?.outlinerOp == "insert-blocks" || e.txMeta?.outlinerOp == "insertBlocks") {
       if (logseq.settings?.enableAutoParse) {
         blockArray?.forEach(parseBlockForLink);
