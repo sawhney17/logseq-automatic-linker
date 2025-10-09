@@ -15,7 +15,7 @@
   "author": "Aryan Sawhney",
   "license": "MIT",
   "dependencies": {
-    "@logseq/libs": "0.0.6",
+    "@logseq/libs": "0.0.17",
     "logseq-dateutils": "^0.0.21",
     "sherlockjs": "^1.4.2"
   },

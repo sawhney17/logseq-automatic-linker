@@ -19,9 +19,9 @@ async function fetchAliases() {
   `;
   let result = await logseq.DB.datascriptQuery(query);
   let resultMap = result
-  .map((item) => item[0].properties.alias) // Extract aliases
-  .filter((alias) => alias !== ""); // Exclude empty aliases
-  
+    .map((item) => item[0].properties.alias) // Extract aliases
+    .filter((alias) => alias !== ""); // Exclude empty aliases
+
   console.log({ LogseqAutomaticLinker: "fetchAliases", result, resultMap });
   return resultMap;
 }
@@ -101,13 +101,14 @@ async function getPages() {
     .map((x) => x.toUpperCase().trim())
     .concat(propertyBasedIgnoreList);
   pagesToIgnore = [...new Set(pagesToIgnore)];
-  const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`;
+  const query = `[:find (pull ?p [*]) 
+                :where 
+                [?p :block/uuid ?u]
+                [?p :block/name]]`;
   logseq.DB.datascriptQuery(query).then(async (results) => {
     pageList = results
-      .filter(
-        (x) => !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
-      )
-      .map((x) => x[0]["original-name"])
+      .filter((x) => !pagesToIgnore.includes(x[0]["name"].toUpperCase()))
+      .map((x) => x[0]["name"])
       .filter((x) => x);
     pageList = pageList.concat((await fetchAliases()).flat());
     //Reverse sort pagelist on the basis of length so that longer page names are matched first
@@ -149,7 +150,10 @@ const main = async () => {
   getPages();
   dateFormat = (await logseq.App.getUserConfigs()).preferredDateFormat;
   logseq.DB.onChanged((e) => {
-    if (e.txMeta?.outlinerOp == "insert-blocks" || e.txMeta?.outlinerOp == "insertBlocks") {
+    if (
+      e.txMeta?.outlinerOp == "insert-blocks" ||
+      e.txMeta?.outlinerOp == "insertBlocks"
+    ) {
       if (logseq.settings?.enableAutoParse) {
         blockArray?.forEach(parseBlockForLink);
       }
