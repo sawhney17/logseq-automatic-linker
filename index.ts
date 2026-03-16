@@ -6,55 +6,62 @@ import { getDateForPage } from "logseq-dateutils";
 import { replaceContentWithPageLinks } from "./src/functions";
 
 let pageList: string[] = [];
-let blockArray: string[] = [];
 let dateFormat = "";
+let isProcessing = false;
 
 async function fetchAliases() {
-  //from https://github.com/sawhney17/logseq-smartblocks
-  let query = `
-  [:find (pull ?b [*])
-             :where
-             [?b :block/properties ?p]
-             [(get ?p :alias)]]
-  `;
-  let result = await logseq.DB.datascriptQuery(query);
-  let resultMap = result
-  .map((item) => item[0].properties.alias) // Extract aliases
-  .filter((alias) => alias !== ""); // Exclude empty aliases
-  
-  console.log({ LogseqAutomaticLinker: "fetchAliases", result, resultMap });
-  return resultMap;
+  try {
+    let query = `
+    [:find (pull ?b [*])
+               :where
+               [?b :block/properties ?p]
+               [(get ?p :alias)]]
+    `;
+    let result = await logseq.DB.datascriptQuery(query);
+    let resultMap = result
+      .map((item: any) => item[0]?.properties?.alias)
+      .filter((alias: any) => alias && alias !== "");
+    return resultMap;
+  } catch (e) {
+    console.error("[AutoLinker] fetchAliases error:", e);
+    return [];
+  }
 }
 
 async function fetchPropertyIgnoreList() {
-  let query = `
-  [:find (pull ?b [*])
-             :where
-             [?b :block/properties ?p]
-             [(get ?p :automatic-ignore)]]
-  `;
-  let result = await logseq.DB.datascriptQuery(query);
-  return result
-    .filter(
-      (item) =>
-        item[0]["original-name"] && item[0].properties["automatic-ignore"]
-    )
-    .map((item) =>
-      [
-        item[0]["original-name"].toUpperCase(),
-        item[0].properties.alias?.map((alias) => alias.toUpperCase()) ?? [],
-      ].flat()
-    )
-    .flat();
+  try {
+    let query = `
+    [:find (pull ?b [*])
+               :where
+               [?b :block/properties ?p]
+               [(get ?p :automatic-ignore)]]
+    `;
+    let result = await logseq.DB.datascriptQuery(query);
+    return result
+      .filter(
+        (item: any) =>
+          item[0]?.["original-name"] && item[0]?.properties?.["automatic-ignore"]
+      )
+      .map((item: any) =>
+        [
+          item[0]["original-name"].toUpperCase(),
+          item[0].properties.alias?.map((alias: string) => alias.toUpperCase()) ?? [],
+        ].flat()
+      )
+      .flat();
+  } catch (e) {
+    console.error("[AutoLinker] fetchPropertyIgnoreList error:", e);
+    return [];
+  }
 }
 
 const settings: SettingSchemaDesc[] = [
   {
     key: "enableAutoParse",
-    description: "Automatically parse the block on enter",
+    description: "Automatically parse the block when leaving it (Enter, Escape, click away)",
     type: "boolean",
     default: false,
-    title: "Automatically parse the block on enter",
+    title: "Automatically parse blocks",
   },
   {
     key: "stateKeybinding",
@@ -67,7 +74,7 @@ const settings: SettingSchemaDesc[] = [
     key: "parseSingleBlockKeybinding",
     description: "Keybinding to parse a single block",
     type: "string",
-    default: "mod+p",
+    default: "alt+shift+l",
     title: "Keybinding for Parsing a Single Block",
   },
   {
@@ -94,42 +101,47 @@ const settings: SettingSchemaDesc[] = [
   },
 ];
 logseq.useSettingsSchema(settings);
+
 async function getPages() {
-  const propertyBasedIgnoreList = await fetchPropertyIgnoreList();
-  let pagesToIgnore = logseq.settings?.pagesToIgnore
-    .split(",")
-    .map((x) => x.toUpperCase().trim())
-    .concat(propertyBasedIgnoreList);
-  pagesToIgnore = [...new Set(pagesToIgnore)];
-  const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`;
-  logseq.DB.datascriptQuery(query).then(async (results) => {
+  try {
+    const propertyBasedIgnoreList = await fetchPropertyIgnoreList();
+    let pagesToIgnore = (logseq.settings?.pagesToIgnore || "")
+      .split(",")
+      .map((x: string) => x.toUpperCase().trim())
+      .concat(propertyBasedIgnoreList);
+    pagesToIgnore = [...new Set(pagesToIgnore)];
+    const query = `[:find (pull ?p [*]) :where [?p :block/uuid ?u][?p :block/original-name]]`;
+    const results = await logseq.DB.datascriptQuery(query);
     pageList = results
       .filter(
-        (x) => !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
+        (x: any) => x[0]?.["original-name"] && !pagesToIgnore.includes(x[0]["original-name"].toUpperCase())
       )
-      .map((x) => x[0]["original-name"])
-      .filter((x) => x);
+      .map((x: any) => x[0]["original-name"])
+      .filter((x: string) => x);
     pageList = pageList.concat((await fetchAliases()).flat());
-    //Reverse sort pagelist on the basis of length so that longer page names are matched first
-    pageList.sort((a, b) => b.length - a.length);
-    console.log({ LogseqAutomaticLinker: "getPages", results, pageList });
-  });
+    pageList.sort((a: string, b: string) => b.length - a.length);
+    console.log("[AutoLinker] Pages loaded:", pageList.length);
+  } catch (e) {
+    console.error("[AutoLinker] getPages error:", e);
+  }
 }
 
-async function parseBlockForLink(d: string) {
-  if (d != null) {
-    let block = await logseq.Editor.getBlock(d);
-    if (block == null) {
-      return;
-    }
+async function parseBlockForLink(uuid: string) {
+  if (uuid == null) return;
 
-    console.log({ LogseqAutomaticLinker: "parseBlockForLink", block });
+  try {
+    let block = await logseq.Editor.getBlock(uuid);
+    if (block == null) return;
 
-    let content = block.content.replaceAll(/{.*}/g, (match) => {
-      return getDateForPage(
-        Sherlock.parse(match.slice(1, -1)).startDate,
-        dateFormat
-      );
+    let content = block.content.replaceAll(/{.*}/g, (match: string) => {
+      try {
+        return getDateForPage(
+          Sherlock.parse(match.slice(1, -1)).startDate,
+          dateFormat
+        );
+      } catch {
+        return match;
+      }
     });
 
     let needsUpdate = false;
@@ -140,39 +152,59 @@ async function parseBlockForLink(d: string) {
       logseq.settings?.parseSingleWordAsTag
     );
     if (needsUpdate) {
-      logseq.Editor.updateBlock(block.uuid, `${content}`);
+      console.log("[AutoLinker] Updating block:", uuid);
+      isProcessing = true;
+      await logseq.Editor.updateBlock(block.uuid, `${content}`);
+      setTimeout(() => { isProcessing = false; }, 500);
     }
+  } catch (e) {
+    console.error("[AutoLinker] parseBlockForLink error:", e);
+    isProcessing = false;
   }
 }
 
 const main = async () => {
-  getPages();
+  console.log("[AutoLinker] Plugin starting...");
+  await getPages();
   dateFormat = (await logseq.App.getUserConfigs()).preferredDateFormat;
-  logseq.DB.onChanged((e) => {
-    if (e.txMeta?.outlinerOp == "insert-blocks" || e.txMeta?.outlinerOp == "insertBlocks") {
-      if (logseq.settings?.enableAutoParse) {
-        blockArray?.forEach(parseBlockForLink);
-      }
-      console.debug({ LogseqAutomaticLinker: "Enter pressed" });
-      blockArray = [];
-    } else {
-      console.debug({ LogseqAutomaticLinker: "Something changed" });
-      //if blocks array doesn't already contain the block uuid, push to it
-      const block = e.blocks[0].uuid;
-      if (!blockArray.includes(block)) {
-        blockArray.push(block);
+  console.log("[AutoLinker] Ready. Pages:", pageList.length, "AutoParse:", logseq.settings?.enableAutoParse);
+
+  logseq.DB.onChanged((e: any) => {
+    // Guard against re-entry from our own updateBlock calls
+    if (isProcessing) return;
+
+    const outlinerOp = e.txMeta?.outlinerOp;
+
+    // Process blocks directly from the event when save-block or insert-blocks fires
+    if (
+      outlinerOp === "insert-blocks" ||
+      outlinerOp === "insertBlocks" ||
+      outlinerOp === "save-block" ||
+      outlinerOp === "saveBlock"
+    ) {
+      if (!logseq.settings?.enableAutoParse) return;
+      if (!e.blocks?.length) return;
+
+      // Collect unique block UUIDs from the event
+      const uuids = [...new Set(e.blocks.map((b: any) => b.uuid).filter(Boolean))] as string[];
+      if (uuids.length > 0) {
+        console.log("[AutoLinker] Processing", uuids.length, "blocks from", outlinerOp);
+        uuids.forEach(parseBlockForLink);
       }
     }
   });
+
   logseq.App.onCurrentGraphChanged(getPages);
-  logseq.Editor.registerBlockContextMenuItem("Parse Block for Links", (e) => {
+
+  logseq.Editor.registerBlockContextMenuItem("Parse Block for Links", async (e: any) => {
+    await getPages();
     return parseBlockForLink(e.uuid);
   });
+
   logseq.App.registerCommandShortcut(
     { binding: logseq.settings?.stateKeybinding },
     () => {
       getPages();
-      blockArray = [];
       const enabledText = logseq.settings?.enableAutoParse
         ? "disabled"
         : "enabled";
@@ -182,10 +214,11 @@ const main = async () => {
       });
     }
   );
+
   logseq.App.registerCommandShortcut(
     { binding: logseq.settings?.parseSingleBlockKeybinding },
-    (e) => {
-      getPages();
+    async (e: any) => {
+      await getPages();
       parseBlockForLink(e.uuid);
     }
   );
